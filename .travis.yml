@@ -1,6 +1,17 @@
-language: haskell
+language: generic
 
 ghc: 8.0
 
+cache:
+  directories:
+    - ~/.stack
+    - ~/.stack-work
+    - $HOME/.stack
+    - $HOME/.stack-work
+
+install:
+  - cabal install stack
+  - stack --no-terminal --install-ghc test --only-dependencies
+
 script:
-  - stack test
+  - stack --no-terminal test --haddock --no-haddock-deps
