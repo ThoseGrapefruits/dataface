@@ -1,5 +1,7 @@
-
-# Created by https://www.gitignore.io/api/haskell
+### IntelliJ IDEA ###
+.idea/
+dataface.iml
+out/
 
 ### Haskell ###
 dist

@@ -13,9 +13,9 @@ import SimpleServer
 
 -- |Default configuration for localhost neo4j server
 defaultConfig :: BoltCfg
-defaultConfig = def {user = "neo4j", password = "neo4j"}
+defaultConfig = def {user = "dataface", password = "dataface"}
 
--- |Run as PORT=8080 stack exec hasbolt-sample-app-exe
+-- |Run as PORT=8080 stack exec dataface-exe
 main :: IO ()
 main = run `catchError` failMsg
   where run = do port <- read <$> getEnv "PORT"
