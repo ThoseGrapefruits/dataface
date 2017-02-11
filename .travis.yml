@@ -10,7 +10,7 @@ cache:
     - $HOME/.stack-work
 
 install:
-  - cabal install stack
+  - curl -sSL https://get.haskellstack.org/ | sh
   - stack --no-terminal --install-ghc test --only-dependencies
 
 script:
