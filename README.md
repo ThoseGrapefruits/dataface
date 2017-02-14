@@ -40,7 +40,7 @@ Concept
 
 Goals
 -----
-- Use a NoSQL database (MongoDB due to project constraints) in a pure manner.
+- Use a NoSQL database (neo4j due to graph representation of faces).
 - Use a functional language we haven't used before (Haskell).
 - Make a product that requires some complexity above simple database interactions.
 
