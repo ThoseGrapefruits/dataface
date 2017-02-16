@@ -67,10 +67,9 @@ queryFace username = do result <- head <$> queryP cypher params
                          L members <- result `at` "cast"
                          cast <- traverse toCast members
                          return $ MovieInfo title cast
-  where cypher = "MATCH (u:User {username:"void"}) -[:CREATED]-> (f0:Face) " <>
-                 "OPTIONAL MATCH (f0:Face) -[c:CHILD*]-> (end:Face) -[:CHILD]-> (:Face) <-[:CREATED]- (u2:User) " <>
-                 "WHERE NOT u.username = u2.username " <>
-                 "RETURN COALESCE(end, f0)"
+  where cypher = "MATCH (u:User {username:{username}}) -[:CREATED]-> (f0:Face) " <>
+                 "OPTIONAL MATCH (f0:Face) -[c:CHILD*{isFork: false}]-> (fx:Face) " <>
+                 "RETURN coalesce(fx, f0)"
         params = fromList [("username", T username)]
 
 
