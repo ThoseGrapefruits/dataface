@@ -87,8 +87,8 @@ toMovie v = do
     return $ Movie identity title released tagline
 
 -- |Create movie node and actors node from single record
-toNodes :: Monad m => Record -> m (MNode, [MNode])
-toNodes r = do
+toMovieNodes :: Monad m => Record -> m (MNode, [MNode])
+toMovieNodes r = do
     title :: Text <- (r `at` "movie") >>= exact
     casts :: [Text] <- (r `at` "cast") >>= exact
     return (MNode title "movie", (`MNode` "actor") <$> casts)

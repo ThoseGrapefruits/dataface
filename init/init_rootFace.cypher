@@ -1,28 +1,6 @@
-// !!! WARNING: RUNNING THIS WILL CLEAR ALL FACES !!!
+CREATE (rootFace:Face {name:'Root Face', created_at:TIMESTAMP()})
 
-/* FUTURE CHANGES TO CONSIDER
- * - Create point along centre vertical between bottom lip and bottom middle
- * - Add eye supports to the top and bottom of the eye?
- *     + Seems like it would help show the structure around the eye better,
- *       but may allow for some funky transformations. Probably should.
- */
-
-// Clear existing relations.
-MATCH () -[c:STARTS_AT|LINE|CHILD|CREATED|PUBLISHED]-> () DELETE c;
-
-// Clear existing nodes
-MATCH (n) WHERE n:Face OR n:Point OR n:User DELETE n;
-
-CREATE (voidUser:User {username: 'void'});
-
-CREATE (ogFace:Face {name:'The Root Face'});
-CREATE (newFace:Face {name:'Sample Duplicate Face'});
-CREATE (modNewFace:Face {name:'Modified Duplicate Face'});
-CREATE
-  (ogFace) -[:CHILD]-> (newFace),
-  (voidUser) -[:CREATED]-> (newFace),
-  (voidUser) -[:PUBLISHED]-> (modNewFace);
-
+// Create the points of the Root Face
 CREATE
     // Outline, top to bottom
     (outline_hairLine:Point {x:0.275, y:0.5}),
@@ -59,11 +37,13 @@ CREATE
 
     // Lips (other 2 points covered by vertical interior centre points)
     (lips_cupidBowPeak:Point {x:0.02, y:0.69}),
-    (lips_corner:Point {x:0.15, y:0.73});
+    (lips_corner:Point {x:0.15, y:0.73})
 
-CREATE (ogFace) -[:STARTS_AT]-> (inline_topMiddle);
+// Connect start of Root Face
+CREATE (rootFace) -[:STARTS_AT]-> (inline_topMiddle)
+
 /*
- * All connections, feature-by-feature, top-to-bottom, (in/out)line first.
+ * All edges, feature-by-feature, top-to-bottom, (in/out)line first.
  *
  * Connections are always represented as (feature) -[:LINE]-> (outline) (feature first)
  * where a connection exists between a feature and the outline.
@@ -73,6 +53,8 @@ CREATE (ogFace) -[:STARTS_AT]-> (inline_topMiddle);
  * not feature's supports section. For example, both lines making up the nose
  * connect to the inline structure, but are listed under "Nose".
  */
+
+// Create all edges in the Root Face
 CREATE
     // Outline, top to bottom
     (inline_topMiddle) -[:LINE]-> (outline_hairLine),
@@ -137,7 +119,4 @@ CREATE
 
     // Lips supports
     (lips_corner) -[:LINE]-> (outline_jowl),
-    (lips_corner) -[:LINE]-> (inline_bottomMiddle);
-
-CREATE (p0_new:Point);
-CREATE (newFace) -[:STARTS_AT]-> (p0_new);
+    (lips_corner) -[:LINE]-> (inline_bottomMiddle)

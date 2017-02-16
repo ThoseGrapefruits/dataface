@@ -1,10 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Data
-    ( ServerState (..), WebM (..)
-    , constructState
-    , querySearch, queryMovie, queryGraph
-    ) where
+module Data (ServerState (..), WebM (..), constructState, querySearch, queryMovie, queryGraph) where
 
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Trans.Reader (ReaderT (..))
@@ -50,7 +46,7 @@ queryMovie title = do result <- head <$> queryP cypher params
 -- |Returns movies with all it's actors
 queryGraph :: Int -> BoltActionT IO MGraph
 queryGraph limit = do records <- queryP cypher params
-                      nodeTuples <- traverse toNodes records
+                      nodeTuples <- traverse toMovieNodes records
                       let movies = fst <$> nodeTuples
                       let actors = nub $ concatMap snd nodeTuples
                       let actorIdx = fromJust . (`lookup` zip actors [0..])
@@ -63,6 +59,19 @@ queryGraph limit = do records <- queryP cypher params
                  "RETURN m.title as movie, collect(a.name) as cast " <>
                  "LIMIT {limit}"
         params = fromList [("limit", I limit)]
+
+-- |Returns faces by username of owner
+queryFace :: Text -> BoltActionT IO MovieInfo
+queryFace username = do result <- head <$> queryP cypher params
+                         T title <- result `at` "title"
+                         L members <- result `at` "cast"
+                         cast <- traverse toCast members
+                         return $ MovieInfo title cast
+  where cypher = "MATCH (u:User {username:"void"}) -[:CREATED]-> (f0:Face) " <>
+                 "OPTIONAL MATCH (f0:Face) -[c:CHILD*]-> (end:Face) -[:CHILD]-> (:Face) <-[:CREATED]- (u2:User) " <>
+                 "WHERE NOT u.username = u2.username " <>
+                 "RETURN COALESCE(end, f0)"
+        params = fromList [("username", T username)]
 
 
 -- |Create pool of connections (4 stripes, 500 ms timeout, 1 resource per stripe)
