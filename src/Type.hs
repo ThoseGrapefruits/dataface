@@ -53,6 +53,7 @@ data Point = Point
 data Face = Face
   { _id :: Text
   , _name :: Text
+  , _startsAt :: Point
   } deriving (Show, Eq)
 
 data FaceInfo = FaceInfo
@@ -113,3 +114,5 @@ toMovieNodes r = do
   title :: Text <- (r `at` "movie") >>= exact
   casts :: [Text] <- (r `at` "cast") >>= exact
   return (MNode title "movie", (`MNode` "actor") <$> casts)
+
+-- |

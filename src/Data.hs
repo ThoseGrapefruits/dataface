@@ -63,13 +63,14 @@ queryGraph limit = do records <- queryP cypher params
 -- |Returns faces by username of owner
 queryFace :: Text -> BoltActionT IO MovieInfo
 queryFace username = do result <- head <$> queryP cypher params
-                         T title <- result `at` "title"
+                         putStrLn result
+                         T id <- result `at` "_id"
                          L members <- result `at` "cast"
                          cast <- traverse toCast members
-                         return $ MovieInfo title cast
-  where cypher = "MATCH (u:User {username:{username}}) -[:CREATED]-> (f0:Face) " <>
-                 "OPTIONAL MATCH (f0:Face) -[c:CHILD*{isFork: false}]-> (fx:Face) " <>
-                 "RETURN coalesce(fx, f0)"
+                         return $ Face id name startsAt
+  where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face) " <>
+                 "OPTIONAL MATCH (f0:Face)-[:CHILD*{isFork: false}]->(fx:Face) " <>
+                 "RETURN coalesce(fx, f0) as face"
         params = fromList [("username", T username)]
 
 
