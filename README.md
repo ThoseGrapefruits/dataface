@@ -2,7 +2,9 @@
 Web-based human-evolved facial structure data, taking the concept of
 [picbreeder](http://picbreeder.org/) and applying it to graphs of facial structure.
 
-> Final project for CS 3200, Spring 2017 @ Northeastern University
+> Final project for CS 3200, Spring 2017 @ Northeastern University.
+
+> Based on the [neo4j-movies-haskell-bolt example](https://github.com/neo4j-examples/neo4j-movies-haskell-bolt).
 
 Requirements
 ------------
@@ -48,5 +50,3 @@ Authors
 -------
 - [Jack Davis](https://github.com/dackJavies)
 - [Logan Moore](https://github.com/ThoseGrapefruits)
-
-> Based on the [neo4j-movies-haskell-bolt example](https://github.com/neo4j-examples/neo4j-movies-haskell-bolt)
