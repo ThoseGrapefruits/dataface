@@ -48,3 +48,5 @@ Authors
 -------
 - [Jack Davis](https://github.com/dackJavies)
 - [Logan Moore](https://github.com/ThoseGrapefruits)
+
+> Based on the [neo4j-movies-haskell-bolt example](https://github.com/neo4j-examples/neo4j-movies-haskell-bolt)
