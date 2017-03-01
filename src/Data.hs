@@ -74,7 +74,10 @@ queryFace username = do result <- head <$> queryP cypher params
         params = fromList [("username", T username)]
 
 
--- |Create pool of connections (4 stripes, 500 ms timeout, 1 resource per stripe)
+-- |Create pool of connections
 constructState :: BoltCfg -> IO ServerState
-constructState bcfg = do pool <- createPool (connect bcfg) close 4 500 1
+constructState bcfg = do let stripes = 4
+                         let timeout = 500 -- ms
+                         let resources = 1 -- resources per stripe
+                         pool <- createPool (connect bcfg) close stripes timeout resources
                          return (ServerState pool)
