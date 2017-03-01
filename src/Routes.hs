@@ -21,6 +21,18 @@ runQ act = do ss <- lift ask
 mainR :: ActionT Text WebM ()
 mainR = file "index.html"
 
+-- |Face response route
+faceR :: ActionT Text WebM ()
+faceR = do username <- param "username" `rescue` const (return 100)
+           graph <- runQ $ queryFaces username
+           json graph
+
+-- |Point response route
+pointR :: ActionT Text WebM ()
+faceR = do username <- param "username" `rescue` const (return 100)
+           graph <- runQ $ queryPoints faceId
+           json graph
+
 -- |Graph response route
 graphR :: ActionT Text WebM ()
 graphR = do limit <- param "limit" `rescue` const (return 100)
