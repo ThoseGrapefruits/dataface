@@ -5,6 +5,7 @@ module Type where
 
 import Data.Aeson (ToJSON (..), object, (.=))
 import Data.Text (Text)
+import Data.Map (singleton)
 
 import Database.Bolt (Record, Value (..), RecordValue (..), Node (..), at)
 
@@ -48,12 +49,22 @@ data MGraph = MGraph
 data Point = Point
   { _x :: Int
   , _y :: Int
-  }
+  } deriving (Show, Eq)
+
+data FRel = FRel
+  { _fsource :: Int
+  , _ftarget :: Int
+  } deriving (Show, Eq)
+
+data FGraph = FGraph
+  { _fpoints :: [Point]
+  , _flinks :: [FRel]
+  } deriving (Show, Eq)
 
 data Face = Face
-  { _face_id :: Text
-  , _face_name :: Text
-  , _creator :: Text
+  { _fname :: Text
+  , _fcreator :: Text
+  , _fgraph :: FGraph
   } deriving (Show, Eq)
 
 
@@ -108,4 +119,3 @@ toMovieNodes r = do
   title :: Text <- (r `at` "movie") >>= exact
   casts :: [Text] <- (r `at` "cast") >>= exact
   return (MNode title "movie", (`MNode` "actor") <$> casts)
-
