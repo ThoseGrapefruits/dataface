@@ -1,0 +1,12 @@
+.node {
+    fill: #000;
+}
+
+.link {
+    stroke: #000;
+    stroke-width: 5px;
+}
+
+.face {
+    border: 1px solid black;
+}

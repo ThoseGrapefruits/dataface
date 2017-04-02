@@ -21,6 +21,10 @@ runQ act = do ss <- lift ask
 mainR :: ActionT Text WebM ()
 mainR = file "index.html"
 
+-- |Stylesheet route
+styleR :: ActionT Text WebM ()
+styleR = file "style.css"
+
 -- |Graph response route
 graphR :: ActionT Text WebM ()
 graphR = do limit <- param "limit" `rescue` const (return 100)

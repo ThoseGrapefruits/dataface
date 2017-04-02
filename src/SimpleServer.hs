@@ -20,6 +20,7 @@ runServer port config = do state <- constructState config
                            scottyT port (`runReaderT` state) $ do
                                middleware logStdoutDev
                                get  "/" mainR
+                               get  "/style.css" styleR
                                get  "/graph" graphR
                                get  "/search" searchR
                                get  "/movie/:title" movieR
