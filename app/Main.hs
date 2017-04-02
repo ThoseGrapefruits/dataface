@@ -18,7 +18,7 @@ defaultConfig = def {user = "dataface", password = "dataface"}
 -- |Run with stack exec dataface-exe (with PORT environment variable set)
 main :: IO ()
 main = run `catchError` failMsg
-    where run = do port <- read <$> getEnv "PORT"
+    where run = do port <- return 8080
                    config <- readConfig `catchError` const (return defaultConfig)
                    runServer port config
           readConfig = do
@@ -28,8 +28,6 @@ main = run `catchError` failMsg
               let (host, port) = let sp = last (elemIndices ':' bolt)
                                  in (read $ take sp bolt, read $ drop (sp+1) bolt)
               return def { user = user, password = pass, host = host, port = port }
-
-  --(read <$> getEnv "PORT" >>= runServer) `catchError` failMsg
 
 failMsg :: (MonadError e m, MonadIO m, Show e) => e -> m ()
 failMsg e = liftIO $ putStrLn ("Oops: " ++ show e)

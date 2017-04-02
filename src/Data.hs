@@ -60,17 +60,23 @@ queryGraph limit = do records <- queryP cypher params
                  "LIMIT {limit}"
         params = fromList [("limit", I limit)]
 
+-- queryFGraph :: Int -> BoltActionT IO FGraph
+-- queryFGraph limit = do records <- queryP cypher params
+                       -- nodeTuples <- traverse toFaceNodes records
+  -- where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face)<-[:LINE*]-(ps:Point) " <>
+                 -- "OPTIONAL MATCH (f0:Face)-[:CHILD*{isFork: false}]->(fx:Face) " <>
+                 -- "RETURN u.username as creator, coalesce(fx, f0).name as face, COLLECT(DISTINCT ps) as points"
+
 -- |Returns faces by username of owner
-queryFace :: Text -> BoltActionT IO Face
-queryFace username = do result <- head <$> queryP cypher params
-                        putStrLn result
-                        T id <- result `at` "id"
-                        T name <- result `at` "name"
-                        return $ Face id name startsAt
-  where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face) " <>
-                 "OPTIONAL MATCH (f0:Face)-[:CHILD*{isFork: false}]->(fx:Face) " <>
-                 "RETURN coalesce(fx, f0) as face"
-        params = fromList [("username", T username)]
+-- queryFace :: Text -> BoltActionT IO Face
+-- queryFace username = do result <- head <$> queryP cypher params
+                        -- T id <- result `at` "id"
+                        -- T name <- result `at` "name"
+                        -- return $ Face id name startsAt
+  -- where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face)<-[:LINE*]-(ps:Point) " <>
+                 -- "OPTIONAL MATCH (f0:Face)-[:CHILD*{isFork: false}]->(fx:Face) " <>
+                 -- "RETURN coalesce(fx, f0) as face, collect(ps) as points"
+        -- params = fromList [("username", T username)]
 
 
 -- |Create pool of connections
