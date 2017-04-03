@@ -107,7 +107,7 @@ queryFaceGraph limit = do records <- queryP cypher params
                           liftIO . putStrLn $ "// relations: "
                           liftIO . print $ relations
                           return $ FGraph points relations
-  where cypher = "MATCH (f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINE*0..10]-(end:Point)<-[l:LINE]-(start:Point) " <>
+  where cypher = "MATCH (f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINE*0..10]-(end:Point)-[l:LINE]-(start:Point) " <>
                  "RETURN f0.name as name, start as point, COLLECT(DISTINCT end) as linked"
         params = fromList [("limit", I limit)]
 

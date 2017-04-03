@@ -36,7 +36,7 @@ CREATE
     (nose_outsideNostril:Point {x:0.06, y:0.6}),
 
     // Lips (other 2 points covered by vertical interior centre points)
-    (lips_cupidBowPeak:Point {x:0.02, y:0.69}),
+    (lips_cupidBowPeak:Point {x:0.03, y:0.69}),
     (lips_corner:Point {x:0.15, y:0.73})
 
 // Connect start of Root Face
@@ -90,7 +90,6 @@ CREATE
     (eye_right) -[:LINE]-> (eye_top),
 
     // Eye supports
-    (eye_left) -[:LINE]-> (eyebrow_topLeft),
     (eye_left) -[:LINE]-> (outline_temple),
     (eye_left) -[:LINE]-> (outline_cheek),
     (eye_left) -[:LINE]-> (cheek_bone),
