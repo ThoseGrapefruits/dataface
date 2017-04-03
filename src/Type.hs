@@ -47,9 +47,9 @@ data MGraph = MGraph
 -- Faces
 ---------------------------------------
 data Point = Point
-  { _x :: Int
-  , _y :: Int
-  } deriving (Show, Eq)
+  { _x :: Double
+  , _y :: Double
+  } deriving (Show, Eq, Ord)
 
 data FRel = FRel
   { _fsource :: Int
@@ -78,9 +78,7 @@ instance ToJSON Value where
   toJSON _     = undefined  -- we do not need Maps and Structures in this example
 
 instance ToJSON Movie where
-  toJSON (Movie i t r tl) = object [ "id" .= i, "title" .= t
-                                   , "released" .= r, "tagline" .= tl
-                                   ]
+  toJSON (Movie i t r tl) = object [ "id" .= i, "title" .= t , "released" .= r, "tagline" .= tl ]
 
 instance ToJSON Cast where
   toJSON (Cast n j r) = object [ "name" .= n, "job" .= j, "role" .= r ]
@@ -89,13 +87,22 @@ instance ToJSON MovieInfo where
   toJSON (MovieInfo t c) = object [ "title" .= t, "cast" .= c ]
 
 instance ToJSON MNode where
-  toJSON (MNode t l) = object ["title" .= t, "label" .= l]
+  toJSON (MNode t l) = object ["title" .= t, "label" .= l ]
 
 instance ToJSON MRel where
-  toJSON (MRel s t) = object ["source" .= s, "target" .= t]
+  toJSON (MRel s t) = object ["source" .= s, "target" .= t ]
 
 instance ToJSON MGraph where
-  toJSON (MGraph n r) = object ["nodes" .= n, "links" .= r]
+  toJSON (MGraph n r) = object [ "nodes" .= n, "links" .= r ]
+
+instance ToJSON FGraph where
+  toJSON (FGraph p l) = object [ "points" .= p, "links" .= l ]
+
+instance ToJSON Point where
+  toJSON (Point x y) = object [ "x" .= x, "y" .= y ]
+
+instance ToJSON FRel where
+  toJSON (FRel s t) = object [ "source" .= s, "target" .= t ]
 
 -- |Converts some BOLT value to 'Cast'
 toCast :: Monad m => Value -> m Cast
@@ -113,9 +120,39 @@ toMovie v = do
   tagline :: Text <- (props `at` "tagline") >>= exact
   return $ Movie identity title released tagline
 
+toPoint :: Monad m => Value -> m Point
+toPoint (L [F x, F y]) = return $ Point x y
+toPoint p = fail ("Not a Point value" ++ (show p))
+
+toPoint' :: Monad m => Node -> m Point
+toPoint' (Node _ _ nodeProps) = do
+  x :: Double <- (nodeProps `at` "x") >>= exact
+  y :: Double <- (nodeProps `at` "y") >>= exact
+  return $ Point x y
+
 -- |Create movie node and actors node from single record
 toMovieNodes :: Monad m => Record -> m (MNode, [MNode])
 toMovieNodes r = do
   title :: Text <- (r `at` "movie") >>= exact
   casts :: [Text] <- (r `at` "cast") >>= exact
   return (MNode title "movie", (`MNode` "actor") <$> casts)
+
+-- |Create face node from single record
+toFaceNodes :: Monad m => Record -> m (Text, Point, [Point])
+toFaceNodes r = do
+  name :: Text <- (r `at` "name") >>= exact
+  return $ print $ "name: "
+  return $ print $ name
+  point :: Node <- (r `at` "point") >>= exact
+  return $ print $ "point: "
+  return $ print $ point
+  point' :: Point <- toPoint' $ point
+  return $ print $ "point': "
+  return $ print $ point'
+  linked :: [Node] <- (r `at` "linked") >>= exact
+  return $ print $ "linked: "
+  return $ print $ linked
+  linked' :: [Point] <- traverse toPoint' linked
+  return $ print $ "linked': "
+  return $ print $ linked'
+  return (name, point', linked')

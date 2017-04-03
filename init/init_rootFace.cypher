@@ -3,7 +3,7 @@ CREATE (rootFace:Face {name:'Root Face', created_at:TIMESTAMP()})
 // Create the points of the Root Face
 CREATE
     // Outline, top to bottom
-    (outline_hairLine:Point {x:0.275, y:0.5}),
+    (outline_hairLine:Point {x:0.275, y:0.05}),
     (outline_temple:Point {x:0.4, y:0.275}),
     (outline_cheek:Point {x:0.35, y:0.55}),
     (outline_jowl:Point {x:0.2, y:0.8}),

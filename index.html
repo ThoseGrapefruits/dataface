@@ -92,26 +92,10 @@
 </script>
 
 <script type="text/javascript">
-    const width = 250, height = 250;
-    const nodeRadius = 8;
+    const width = 500, height = 500;
+    const nodeRadius = 3;
 
     const svgns = "http://www.w3.org/2000/svg";
-
-    const fakeFaceJSON = "{" +
-                             "\"links\": [" +
-                             "{\"source\": 0, \"target\": 1}," +
-                             "{\"source\": 1, \"target\": 2}," +
-                             "{\"source\": 2, \"target\": 3}," +
-                             "{\"source\": 3, \"target\": 0}" +
-                             "]," +
-
-                             "\"nodes\": [" +
-                             "{\"x\": 0.2, \"y\": 0.2}," +
-                             "{\"x\": 0.4, \"y\": 0.2}," +
-                             "{\"x\": 0.4, \"y\": 0.8}," +
-                             "{\"x\": 0.2, \"y\": 0.8}" +
-                             "]" +
-                         "}";
 
     function createFaceSVG(width, height) {
         const svg = document.createElementNS(svgns, "svg");
@@ -123,10 +107,10 @@
     }
 
     function pointsRatioToAbsolute(xRatio, yRatio) {
-        const scaleFactor = width / 2;
-        const rawPosition = (scaleFactor * xRatio);
-        return [[-rawPosition + scaleFactor, height * yRatio], // left side
-                [rawPosition + scaleFactor, height * yRatio]]; // right side
+        const offset = width / 2;
+        const rawPosition = (width * xRatio);
+        return [[-rawPosition + offset, height * yRatio], // left side
+                [rawPosition + offset, height * yRatio]]; // right side
     }
 
     function drawNode(svg, xRatio, yRatio) {
@@ -164,18 +148,17 @@
         }
     }
 
-    const json = JSON.parse(fakeFaceJSON);
+    $.getJSON("/faceGraph", function (json) {
+        const svg = createFaceSVG(width, height);
 
-    const svg = createFaceSVG(width, height);
+        json.links.forEach(function (link) {
+            drawLink(svg, json.points[link.source], json.points[link.target])
+        });
 
-    json.links.forEach(function (link) {
-        drawLink(svg, json.nodes[link.source], json.nodes[link.target])
+        json.points.forEach(function (node) {
+            drawNode(svg, node.x, node.y);
+        });
     });
-
-    json.nodes.forEach(function (node) {
-        drawNode(svg, node.x, node.y);
-    });
-
 </script>
 </body>
 </html>
