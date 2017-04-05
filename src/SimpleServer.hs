@@ -21,7 +21,9 @@ runServer port config = do state <- constructState config
                                middleware logStdoutDev
                                get  "/" mainR
                                get  "/graph" graphR
+                               get  "/faceGraph" faceGraphR
                                get  "/search" searchR
                                get  "/movie/:title" movieR
+                               get  "/style.css" styleR
                             -- post "/user/#/create"
                             -- get  "/user/:username/faces" faceR

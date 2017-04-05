@@ -1,7 +1,9 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo4j Movies</title>
+    <title>Dataface</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
@@ -14,7 +16,7 @@
     <button class="btn btn-default" type="submit">Search</button>
 </form>
 <div class="navbar-brand">
-    <div class="brand">Neo4j Movies</div>
+    <div class="brand">Dataface</div>
 </div>
 
 <div id="face_1">
@@ -53,13 +55,6 @@
         </div>
     </div>
 </div>
-<style type="text/css">
-    .node { stroke: #222; stroke-width: 1.5px; }
-    .node.actor { fill: #888; }
-    .node.movie { fill: #BBB; }
-    .link { stroke: #999; stroke-opacity: .6; stroke-width: 1px; }
-</style>
-
 <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script type="text/javascript">
     $(function () {
@@ -69,7 +64,7 @@
                         if (!data) return;
                         $("#title").text(data.title);
                         $("#poster").attr("src","http://neo4j-contrib.github.io/developer-resources/language-guides/assets/posters/"+encodeURIComponent(data.title)+".jpg");
-                        var $list = $("#crew").empty();
+                        const $list = $("#crew").empty();
                         data.cast.forEach(function (cast) {
                             $list.append($("<li>" + cast.name + " " + cast.job + (cast.job === "acted" ? " as " + cast.role : "") + "</li>"));
                         });
@@ -77,13 +72,12 @@
             return false;
         }
         function search() {
-            var query=$("#search").find("input[name=search]").val();
+            const query=$("#search").find("input[name=search]").val();
             $.get("/search?q=" + encodeURIComponent(query),
                     function (data) {
-                        var t = $("table#results tbody").empty();
+                        const t = $("table#results tbody").empty();
                         if (!data || data.length === 0) return;
                         data.forEach(function (movie) {
-                            console.log(movie);
                             $("<tr><td class='movie'>" + movie.title + "</td><td>" + movie.released + "</td><td>" + movie.tagline + "</td></tr>").appendTo(t)
                                     .click(function() { showMovie($(this).find("td.movie").text());})
                         });
@@ -98,44 +92,25 @@
 </script>
 
 <script type="text/javascript">
-    const width = 250, height = 250;
-    const nodeRadius = 10;
-    const linkStroke = "black", linkStrokeWidth = 5;
-    const nodeColor = "black";
+    const width = 500, height = 500;
+    const nodeRadius = 3;
 
     const svgns = "http://www.w3.org/2000/svg";
 
-    const fakeFaceJSON = "{" +
-                             "\"links\": [" +
-                             "{\"source\": 0, \"target\": 1}," +
-                             "{\"source\": 1, \"target\": 2}," +
-                             "{\"source\": 2, \"target\": 3}," +
-                             "{\"source\": 3, \"target\": 0}" +
-                             "]," +
-
-                             "\"nodes\": [" +
-                             "{\"x\": 0.2, \"y\": 0.2}," +
-                             "{\"x\": 0.4, \"y\": 0.2}," +
-                             "{\"x\": 0.4, \"y\": 0.8}," +
-                             "{\"x\": 0.2, \"y\": 0.8}" +
-                             "]" +
-                         "}";
-
-    function createSVG(width, height) {
+    function createFaceSVG(width, height) {
         const svg = document.createElementNS(svgns, "svg");
-        svg.setAttribute('style', 'border: 1px solid black');
         svg.setAttribute('width', width);
         svg.setAttribute('height', height);
-        svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+        svg.setAttribute('class', 'face');
         document.body.appendChild(svg);
         return svg;
     }
 
     function pointsRatioToAbsolute(xRatio, yRatio) {
-        const scaleFactor = width / 2;
-        const rawPosition = (scaleFactor * xRatio);
-        return [[-rawPosition + scaleFactor, height * yRatio], // left side
-                [rawPosition + scaleFactor, height * yRatio]]; // right side
+        const offset = width / 2;
+        const rawPosition = (width * xRatio);
+        return [[-rawPosition + offset, height * yRatio], // left side
+                [rawPosition + offset, height * yRatio]]; // right side
     }
 
     function drawNode(svg, xRatio, yRatio) {
@@ -145,8 +120,11 @@
             const circle = document.createElementNS(svgns, "circle");
             circle.setAttribute("cx", x);
             circle.setAttribute("cy", y);
+            circle.setAttribute("DEBUG_xRatio", xRatio);
+            circle.setAttribute("DEBUG_yRatio", yRatio);
             circle.setAttribute("r", nodeRadius);
-            circle.setAttribute("fill", nodeColor);
+
+            circle.setAttribute("class", "node");
 
             svg.appendChild(circle);
         });
@@ -155,7 +133,6 @@
     function drawLink(svg, source, target) {
         const sourcePoints = pointsRatioToAbsolute(source.x, source.y);
         const targetPoints = pointsRatioToAbsolute(target.x, target.y);
-        console.log(sourcePoints, targetPoints);
 
         for (let i = 0; i < sourcePoints.length && i < targetPoints.length; i++) {
             let [sourceX, sourceY] = sourcePoints[i];
@@ -164,33 +141,30 @@
             const line = document.createElementNS(svgns, "line");
             line.setAttribute("x1", sourceX);
             line.setAttribute("y1", sourceY);
+            line.setAttribute("DEBUG_sourceXRatio", source.x);
+            line.setAttribute("DEBUG_sourceYRatio", source.y);
             line.setAttribute("x2", targetX);
             line.setAttribute("y2", targetY);
+            line.setAttribute("DEBUG_targetXRatio", target.x);
+            line.setAttribute("DEBUG_targetYRatio", target.y);
 
-            line.setAttribute("stroke", linkStroke);
-            line.setAttribute("stroke-width", linkStrokeWidth);
+            line.setAttribute("class", "link");
 
             svg.appendChild(line);
         }
     }
 
-    $.getJSON("/graph", function(json) {
-        console.log(json);
+    $.getJSON("/faceGraph", function (json) {
+        const svg = createFaceSVG(width, height);
+
+        json.links.forEach(function (link) {
+            drawLink(svg, json.points[link.source], json.points[link.target])
+        });
+
+        json.points.forEach(function (node) {
+            drawNode(svg, node.x, node.y);
+        });
     });
-
-    const json = JSON.parse(fakeFaceJSON);
-    console.log(json);
-
-    var svg = createSVG(width, height);
-
-    json.links.forEach(function (link) {
-        drawLink(svg, json.nodes[link.source], json.nodes[link.target])
-    });
-
-    json.nodes.forEach(function (node) {
-        drawNode(svg, node.x, node.y);
-    });
-
 </script>
 </body>
 </html>

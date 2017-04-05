@@ -21,11 +21,21 @@ runQ act = do ss <- lift ask
 mainR :: ActionT Text WebM ()
 mainR = file "index.html"
 
+-- |Stylesheet route
+styleR :: ActionT Text WebM ()
+styleR = file "style.css"
+
 -- |Graph response route
 graphR :: ActionT Text WebM ()
-graphR = do limit <- param "limit" `rescue` const (return 100)
+graphR = do limit <- param "limit" `rescue` const (return 5)
             graph <- runQ $ queryGraph limit
             json graph
+
+-- |Face graph response route
+faceGraphR :: ActionT Text WebM ()
+faceGraphR = do limit <- param "limit" `rescue` const (return 5)
+                graph <- runQ $ queryFaceGraph limit
+                json graph
 
 -- |Search response route
 searchR :: ActionT Text WebM ()
