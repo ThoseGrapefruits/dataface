@@ -1,16 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Data (ServerState (..), WebM (..), constructState, querySearch, queryMovie, queryGraph, queryFaceGraph) where
+module Data (ServerState (..), WebM (..), constructState, querySearch, queryMovie, queryGraph,
+             queryUser, createUser, queryFaceGraph) where
 
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Trans.Reader (ReaderT (..))
+import Crypto.BCrypt
+import Data.ByteString.Char8 (pack)
 import Data.List (nub)
 import Data.Maybe (fromJust)
 import Data.Map.Strict (fromList, (!))
 import Data.Monoid ((<>))
 import Data.Pool (Pool, createPool)
-import Data.Text (Text)
+import Data.Text (Text, unpack, toLower)
 import Data.Tuple.Select (sel1, sel2, sel3)
+import Data.Typeable (typeOf)
 import Database.Bolt
 
 import Type
@@ -73,50 +77,73 @@ queryGraph limit = do records <- queryP cypher params
                  "LIMIT {limit}"
         params = fromList [("limit", I limit)]
 
+buildFGraph :: [Record] -> IO FGraph
+buildFGraph records = do nodeTuples <- traverse toFaceNodes records
+                         liftIO . putStrLn $ ""
+                         liftIO . putStrLn $ "// nodeTuples: "
+                         liftIO . print $ nodeTuples
+                         let faces = sel1 <$> nodeTuples
+                         liftIO . putStrLn $ ""
+                         liftIO . putStrLn $ "// faces: "
+                         liftIO . print $ faces
+                         let points = nub $ (map sel2 nodeTuples)
+                         liftIO . putStrLn $ ""
+                         liftIO . putStrLn $ "// points: "
+                         liftIO . print $ points
+                         let connectedPoints = nub $ concatMap sel3 nodeTuples
+                         liftIO . putStrLn $ ""
+                         liftIO . putStrLn $ "// connectedPoints: "
+                         liftIO . print $ connectedPoints
+                         let faceIdx = fromJust . (`lookup` zip points [0..])
+                         let modifyTpl (name, point, linked) = (point, faceIdx <$> linked)
+                         let indexMap = fromList $ (map modifyTpl nodeTuples)
+                         liftIO . putStrLn $ ""
+                         liftIO . putStrLn $ "// indexMap: "
+                         liftIO . print $ indexMap
+                         let mkTuples (m, t) = (`FRel` t) <$> indexMap ! m
+                         let relations = concatMap mkTuples $ zip points [0..]
+                         liftIO . putStrLn $ ""
+                         liftIO . putStrLn $ "// relations: "
+                         liftIO . print $ relations
+                         return (FGraph points relations)
+
 -- |Returns face with all it's points
 queryFaceGraph :: Int -> BoltActionT IO FGraph
 queryFaceGraph limit = do records <- queryP cypher params
+                          liftIO . print . typeOf $ records
                           liftIO . putStrLn $ ""
                           liftIO . putStrLn $ "// records: "
                           liftIO . print $ records
-                          nodeTuples <- traverse toFaceNodes records
+                          graph <- liftIO $ (buildFGraph records)
+                          liftIO . print . typeOf $ graph
                           liftIO . putStrLn $ ""
-                          liftIO . putStrLn $ "// nodeTuples: "
-                          liftIO . print $ nodeTuples
-                          let faces = sel1 <$> nodeTuples
-                          liftIO . putStrLn $ ""
-                          liftIO . putStrLn $ "// faces: "
-                          liftIO . print $ faces
-                          let points = nub $ (map sel2 nodeTuples)
-                          liftIO . putStrLn $ ""
-                          liftIO . putStrLn $ "// points: "
-                          liftIO . print $ points
-                          let connectedPoints = nub $ concatMap sel3 nodeTuples
-                          liftIO . putStrLn $ ""
-                          liftIO . putStrLn $ "// connectedPoints: "
-                          liftIO . print $ connectedPoints
-                          let faceIdx = fromJust . (`lookup` zip points [0..])
-                          let modifyTpl (name, point, linked) = (point, faceIdx <$> linked)
-                          let indexMap = fromList $ (map modifyTpl nodeTuples)
-                          liftIO . putStrLn $ ""
-                          liftIO . putStrLn $ "// indexMap: "
-                          liftIO . print $ indexMap
-                          let mkTuples (m, t) = (`FRel` t) <$> indexMap ! m
-                          let relations = concatMap mkTuples $ zip points [0..]
-                          liftIO . putStrLn $ ""
-                          liftIO . putStrLn $ "// relations: "
-                          liftIO . print $ relations
-                          return $ FGraph points relations
-  where cypher = "MATCH (f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINE*0..10]-(end:Point)-[l:LINE]-(start:Point) " <>
-                 "RETURN f0.name as name, start as point, COLLECT(DISTINCT end) as linked"
+                          liftIO . putStrLn $ "// graph: "
+                          liftIO . print $ graph
+                          return $ graph
+  where cypher = "MATCH (f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point) " <>
+                 "RETURN f0.name as name, {point: start, linked: COLLECT(DISTINCT end)} as group"
         params = fromList [("limit", I limit)]
 
--- queryFGraph :: Int -> BoltActionT IO FGraph
--- queryFGraph limit = do records <- queryP cypher params
-                       -- nodeTuples <- traverse toFaceNodes records
-  -- where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face)<-[:LINE*]-(ps:Point) " <>
-                 -- "OPTIONAL MATCH (f0:Face)-[:CHILD*{isFork: false}]->(fx:Face) " <>
-                 -- "RETURN u.username as creator, coalesce(fx, f0).name as face, COLLECT(DISTINCT ps) as points"
+queryUser :: Text -> BoltActionT IO User
+queryUser username = do records <- queryP cypher params
+                        liftIO . putStrLn $ "// RECORDS FOR USER " ++ (show username)
+                        liftIO . print $ records
+                        graph <- liftIO $ (buildFGraph records)
+                        return (User username [(Face username "face" graph)])
+  where cypher = "MATCH (u:User {username: {username} })-[:CREATED]->(f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point) " <>
+                 "RETURN u.username as username, f0.name as name, {point: start , linked: COLLECT(DISTINCT end)} as group"
+        params = fromList [("username", T username)]
+
+-- |Create user with the given username and password
+createUser :: Text -> Text -> BoltActionT IO User
+createUser username password = do
+    records <- queryP cypher params
+    liftIO . putStrLn $ "// CREATING USER" ++ (show username)
+    liftIO . print $ records
+    return (User username [])
+  where cypher = "CREATE (u:User {username: {username}, passwordHash: {passwordHash}})" <>
+                 "RETURN u"
+        params = fromList [("username", T (toLower username)), ("passwordHash", T password)]
 
 -- |Returns faces by username of owner
 -- queryFace :: Text -> BoltActionT IO Face
@@ -124,7 +151,7 @@ queryFaceGraph limit = do records <- queryP cypher params
                         -- T id <- result `at` "id"
                         -- T name <- result `at` "name"
                         -- return $ Face id name startsAt
-  -- where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face)<-[:LINE*]-(ps:Point) " <>
+  -- where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face)<-[:LINK*]-(ps:Point) " <>
                  -- "OPTIONAL MATCH (f0:Face)-[:CHILD*{isFork: false}]->(fx:Face) " <>
                  -- "RETURN coalesce(fx, f0) as face, collect(ps) as points"
         -- params = fromList [("username", T username)]

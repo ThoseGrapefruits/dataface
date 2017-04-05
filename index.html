@@ -122,7 +122,7 @@
             circle.setAttribute("cy", y);
             circle.setAttribute("DEBUG_xRatio", xRatio);
             circle.setAttribute("DEBUG_yRatio", yRatio);
-            circle.setAttribute("r", nodeRadius);
+            circle.setAttribute("r", String(nodeRadius));
 
             circle.setAttribute("class", "node");
 
@@ -141,12 +141,8 @@
             const line = document.createElementNS(svgns, "line");
             line.setAttribute("x1", sourceX);
             line.setAttribute("y1", sourceY);
-            line.setAttribute("DEBUG_sourceXRatio", source.x);
-            line.setAttribute("DEBUG_sourceYRatio", source.y);
             line.setAttribute("x2", targetX);
             line.setAttribute("y2", targetY);
-            line.setAttribute("DEBUG_targetXRatio", target.x);
-            line.setAttribute("DEBUG_targetYRatio", target.y);
 
             line.setAttribute("class", "link");
 

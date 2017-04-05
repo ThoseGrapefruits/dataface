@@ -6,6 +6,7 @@ module Type where
 import Data.Aeson (ToJSON (..), object, (.=))
 import Data.Text (Text)
 import Data.Map (singleton)
+import Control.Monad.Trans (liftIO)
 
 import Database.Bolt (Record, Value (..), RecordValue (..), Node (..), at)
 
@@ -62,11 +63,15 @@ data FGraph = FGraph
   } deriving (Show, Eq)
 
 data Face = Face
-  { _fname :: Text
-  , _fcreator :: Text
+  { _fcreator :: Text
+  , _fname :: Text
   , _fgraph :: FGraph
   } deriving (Show, Eq)
 
+data User = User
+  { _username :: Text
+  , _faces :: [Face]
+  } deriving (Show, Eq)
 
 instance ToJSON Value where
   toJSON (N _) = toJSON ()
@@ -104,6 +109,12 @@ instance ToJSON Point where
 instance ToJSON FRel where
   toJSON (FRel s t) = object [ "source" .= s, "target" .= t ]
 
+instance ToJSON Face where
+  toJSON (Face n c g) = object [ "name" .= n, "creator" .= c, "graph" .= g ]
+
+instance ToJSON User where
+  toJSON (User n fs) = object [ "name" .= n, "faces" .= fs ]
+
 -- |Converts some BOLT value to 'Cast'
 toCast :: Monad m => Value -> m Cast
 toCast (L [T name, T job, role']) = return $ Cast name job role'
@@ -140,19 +151,10 @@ toMovieNodes r = do
 -- |Create face node from single record
 toFaceNodes :: Monad m => Record -> m (Text, Point, [Point])
 toFaceNodes r = do
+  group :: Record <- (r `at` "group") >>= exact
   name :: Text <- (r `at` "name") >>= exact
-  return $ print $ "name: "
-  return $ print $ name
-  point :: Node <- (r `at` "point") >>= exact
-  return $ print $ "point: "
-  return $ print $ point
+  point :: Node <- (group `at` "point") >>= exact
   point' :: Point <- toPoint' $ point
-  return $ print $ "point': "
-  return $ print $ point'
-  linked :: [Node] <- (r `at` "linked") >>= exact
-  return $ print $ "linked: "
-  return $ print $ linked
+  linked :: [Node] <- (group `at` "linked") >>= exact
   linked' :: [Point] <- traverse toPoint' linked
-  return $ print $ "linked': "
-  return $ print $ linked'
   return (name, point', linked')
