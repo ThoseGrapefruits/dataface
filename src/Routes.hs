@@ -35,7 +35,26 @@ graphR = do limit <- param "limit" `rescue` const (return 5)
 faceGraphR :: ActionT Text WebM ()
 faceGraphR = do limit <- param "limit" `rescue` const (return 5)
                 graph <- runQ $ queryFaceGraph limit
+                liftIO . print $ "//// GRAPH: "
+                liftIO . print $ graph
                 json graph
+
+-- |User response route
+getUserR :: ActionT Text WebM ()
+getUserR = do username <- param "username"
+              user <- runQ $ queryUser username
+              liftIO . putStrLn $ "//// GET USER: "
+              liftIO . print $ user
+              json user
+
+-- |User creation route
+createUserR :: ActionT Text WebM ()
+createUserR = do username <- param "username"
+                 password <- param "password"
+                 user <- runQ $ (createUser username password)
+                 liftIO . putStrLn $ "//// CREATE USER: "
+                 liftIO . print $ user
+                 json user
 
 -- |Search response route
 searchR :: ActionT Text WebM ()

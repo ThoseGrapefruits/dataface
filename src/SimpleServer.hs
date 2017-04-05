@@ -25,5 +25,5 @@ runServer port config = do state <- constructState config
                                get  "/search" searchR
                                get  "/movie/:title" movieR
                                get  "/style.css" styleR
-                            -- post "/user/#/create"
-                            -- get  "/user/:username/faces" faceR
+                               get  "/user/:username" getUserR
+                               post "/create/user/" createUserR

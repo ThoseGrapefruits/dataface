@@ -1,4 +1,6 @@
+CREATE (rootUser:User {username: 'root', created_at:TIMESTAMP()})
 CREATE (rootFace:Face {name:'Root Face', created_at:TIMESTAMP()})
+CREATE (rootUser) -[:CREATED]-> (rootFace)
 
 // Create the points of the Root Face
 CREATE
@@ -45,7 +47,7 @@ CREATE (rootFace) -[:STARTS_AT]-> (inline_topMiddle)
 /*
  * All edges, feature-by-feature, top-to-bottom, (in/out)line first.
  *
- * Connections are always represented as (feature) -[:LINE]-> (outline) (feature first)
+ * Connections are always represented as (feature) -[:LINK]-> (outline) (feature first)
  * where a connection exists between a feature and the outline.
  *
  * If a connection could be considered both a support and part of the feature,
@@ -57,65 +59,89 @@ CREATE (rootFace) -[:STARTS_AT]-> (inline_topMiddle)
 // Create all edges in the Root Face
 CREATE
     // Outline, top to bottom
-    (inline_topMiddle) -[:LINE]-> (outline_hairLine),
-    (outline_hairLine) -[:LINE]-> (outline_temple),
-    (outline_temple) -[:LINE]-> (outline_cheek),
-    (outline_cheek) -[:LINE]-> (outline_jowl),
-    (outline_jowl) -[:LINE]-> (inline_bottomMiddle),
+    (inline_topMiddle) -[:LINK]-> (outline_hairLine),
+    (outline_hairLine) -[:LINK]-> (outline_temple),
+    (outline_temple) -[:LINK]-> (outline_cheek),
+    (outline_cheek) -[:LINK]-> (outline_jowl),
+    (outline_jowl) -[:LINK]-> (inline_bottomMiddle),
 
     // Vertical centre line (not sure if these connections should actually exist)
-    (inline_bottomMiddle) -[:LINE]-> (inline_lowerLipMiddle),
-    (inline_lowerLipMiddle) -[:LINE]-> (inline_upperLipMiddle),
-    (inline_upperLipMiddle) -[:LINE]-> (inline_noseTip),
-    (inline_noseTip) -[:LINE]-> (inline_noseBridge),
-    (inline_noseBridge) -[:LINE]-> (inline_topMiddle),
+    (inline_bottomMiddle) -[:LINK]-> (inline_lowerLipMiddle),
+    (inline_lowerLipMiddle) -[:LINK]-> (inline_upperLipMiddle),
+    (inline_upperLipMiddle) -[:LINK]-> (inline_noseTip),
+    (inline_noseTip) -[:LINK]-> (inline_noseBridge),
+    (inline_noseBridge) -[:LINK]-> (inline_topMiddle),
 
     // Eyebrow
-    (eyebrow_topRight) -[:LINE]-> (eyebrow_topLeft),
-    (eyebrow_topLeft) -[:LINE]-> (eyebrow_bottomLeft),
-    (eyebrow_bottomLeft) -[:LINE]-> (eyebrow_bottomRight),
-    (eyebrow_bottomRight) -[:LINE]-> (eyebrow_topRight),
+    (eyebrow_topRight) -[:LINK]-> (eyebrow_topLeft),
+    (eyebrow_topLeft) -[:LINK]-> (eyebrow_bottomLeft),
+    (eyebrow_bottomLeft) -[:LINK]-> (eyebrow_bottomRight),
+    (eyebrow_bottomRight) -[:LINK]-> (eyebrow_topRight),
 
     // Eyebrow supports
-    (eyebrow_topRight) -[:LINE]-> (inline_topMiddle),
-    (eyebrow_topLeft) -[:LINE]-> (outline_hairLine),
-    (eyebrow_bottomLeft) -[:LINE]-> (outline_temple),
-    (eyebrow_bottomLeft) -[:LINE]-> (eye_left),
-    (eyebrow_bottomRight) -[:LINE]-> (inline_browBridge),
+    (eyebrow_topRight) -[:LINK]-> (inline_topMiddle),
+    (eyebrow_topLeft) -[:LINK]-> (outline_hairLine),
+    (eyebrow_bottomLeft) -[:LINK]-> (outline_temple),
+    (eyebrow_bottomLeft) -[:LINK]-> (eye_left),
+    (eyebrow_bottomRight) -[:LINK]-> (inline_browBridge),
 
     // Eye
-    (eye_top) -[:LINE]-> (eye_left),
-    (eye_left) -[:LINE]-> (eye_bottom),
-    (eye_bottom) -[:LINE]-> (eye_right),
-    (eye_right) -[:LINE]-> (eye_top),
+    (eye_top) -[:LINK]-> (eye_left),
+    (eye_left) -[:LINK]-> (eye_bottom),
+    (eye_bottom) -[:LINK]-> (eye_right),
+    (eye_right) -[:LINK]-> (eye_top),
 
     // Eye supports
-    (eye_left) -[:LINE]-> (outline_temple),
-    (eye_left) -[:LINE]-> (outline_cheek),
-    (eye_left) -[:LINE]-> (cheek_bone),
-    (eye_right) -[:LINE]-> (inline_browBridge),
-    (eye_right) -[:LINE]-> (inline_noseBridge),
+    (eye_left) -[:LINK]-> (outline_temple),
+    (eye_left) -[:LINK]-> (outline_cheek),
+    (eye_left) -[:LINK]-> (cheek_bone),
+    (eye_right) -[:LINK]-> (inline_browBridge),
+    (eye_right) -[:LINK]-> (inline_noseBridge),
 
     // Cheekbone supports
-    (cheek_bone) -[:LINE]-> (inline_noseBridge),
-    (cheek_bone) -[:LINE]-> (outline_cheek),
-    (cheek_bone) -[:LINE]-> (nose_outsideNostril),
-    (cheek_bone) -[:LINE]-> (lips_corner),
-    (cheek_bone) -[:LINE]-> (outline_jowl),
+    (cheek_bone) -[:LINK]-> (inline_noseBridge),
+    (cheek_bone) -[:LINK]-> (outline_cheek),
+    (cheek_bone) -[:LINK]-> (nose_outsideNostril),
+    (cheek_bone) -[:LINK]-> (lips_corner),
+    (cheek_bone) -[:LINK]-> (outline_jowl),
 
     // Nose
-    (nose_outsideNostril) -[:LINE]-> (inline_noseBridge),
-    (nose_outsideNostril) -[:LINE]-> (inline_noseTip),
+    (nose_outsideNostril) -[:LINK]-> (inline_noseBridge),
+    (nose_outsideNostril) -[:LINK]-> (inline_noseTip),
 
     // Nose supports
-    (nose_outsideNostril) -[:LINE]-> (lips_cupidBowPeak),
-    (nose_outsideNostril) -[:LINE]-> (lips_corner),
+    (nose_outsideNostril) -[:LINK]-> (lips_cupidBowPeak),
+    (nose_outsideNostril) -[:LINK]-> (lips_corner),
 
     // Lips
-    (lips_corner) -[:LINE]-> (lips_cupidBowPeak),
-    (lips_cupidBowPeak) -[:LINE]-> (inline_upperLipMiddle),
-    (lips_corner) -[:LINE]-> (inline_lowerLipMiddle),
+    (lips_corner) -[:LINK]-> (lips_cupidBowPeak),
+    (lips_cupidBowPeak) -[:LINK]-> (inline_upperLipMiddle),
+    (lips_corner) -[:LINK]-> (inline_lowerLipMiddle),
 
     // Lips supports
-    (lips_corner) -[:LINE]-> (outline_jowl),
-    (lips_corner) -[:LINE]-> (inline_bottomMiddle)
+    (lips_corner) -[:LINK]-> (outline_jowl),
+    (lips_corner) -[:LINK]-> (inline_bottomMiddle)
+
+// Face duplication
+MATCH (u:User {username: "root" })-[created:CREATED]->(f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point)
+WITH COLLECT(l) AS links, f0 AS f0, p0 AS p0, created AS created, u AS u
+CREATE (copy:Face)
+SET copy=f0
+SET copy.name = 'Copy2'
+
+CREATE (u)-[:CREATED]->(copy)
+
+CREATE (copyP0:Point)
+SET copyP0=p0
+
+CREATE (copy)-[:STARTS_AT]->(copyP0)
+
+FOREACH (link in links |
+  CREATE (copyStart:Point)
+  SET copyStart=startNode(link)
+  CREATE (copyEnd:Point)
+  SET copyEnd=endNode(link)
+  CREATE (copyStart)-[copyLink:LINK]->(copyEnd)
+)
+
+RETURN copy, copyP0
