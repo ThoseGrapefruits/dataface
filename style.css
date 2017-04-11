@@ -1,3 +1,20 @@
+@import url('https://fonts.googleapis.com/css?family=Cardo|Exo:900');
+
+html, input, button {
+    font-family: "Cardo", serif;
+    font-weight: 400;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Exo", sans-serif;
+    font-weight: 900;
+}
+
+button, input {
+    background: none;
+    border: solid black 0.1em;
+    padding: 0.4em;
+}
+
 .node {
     fill: #000;
 }
