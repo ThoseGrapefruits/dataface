@@ -1,93 +1,44 @@
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dataface</title>
-
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
-<div id="graph">
-</div>
-<form role="search" class="navbar-form" id="search">
-    <div class="form-group">
-        <input type="text" value="Matrix" placeholder="Search for Movie Title" class="form-control" name="search">
-    </div>
-    <button class="btn btn-default" type="submit">Search</button>
-</form>
-<div class="navbar-brand">
-    <div class="brand">Dataface</div>
+
+<div class="header">
+    <h1>dataface</h1>
+    <form id="sign-up">
+        <div class="form-group">
+            <input type="text" placeholder="username" name="username">
+            <input type="password" placeholder="password" name="password">
+            <button type="submit">Sign Up</button>
+        </div>
+    </form>
 </div>
 
 <div id="face_1">
 </div>
 
-<div class="row">
-    <div class="col-md-5">
-        <div class="panel panel-default">
-            <div class="panel-heading">Search Results</div>
-            <table id="results" class="table table-striped table-hover">
-                <thead>
-                <tr>
-                    <th>Movie</th>
-                    <th>Released</th>
-                    <th>Tagline</th>
-                </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="col-md-7">
-        <div class="panel panel-default">
-            <div class="panel-heading" id="title">Details</div>
-            <div class="row">
-                <div class="col-sm-4 col-md-4">
-                    <img src="" class="well" id="poster"/>
-                </div>
-                <div class="col-md-8 col-sm-8">
-                    <h4>Crew</h4>
-                    <ul id="crew">
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+        crossorigin="anonymous"></script>
 <script type="text/javascript">
     $(function () {
-        function showMovie(title) {
-            $.get("/movie/" + encodeURIComponent(title),
-                    function (data) {
-                        if (!data) return;
-                        $("#title").text(data.title);
-                        $("#poster").attr("src","http://neo4j-contrib.github.io/developer-resources/language-guides/assets/posters/"+encodeURIComponent(data.title)+".jpg");
-                        const $list = $("#crew").empty();
-                        data.cast.forEach(function (cast) {
-                            $list.append($("<li>" + cast.name + " " + cast.job + (cast.job === "acted" ? " as " + cast.role : "") + "</li>"));
-                        });
-                    }, "json");
-            return false;
-        }
-        function search() {
-            const query=$("#search").find("input[name=search]").val();
-            $.get("/search?q=" + encodeURIComponent(query),
-                    function (data) {
-                        const t = $("table#results tbody").empty();
-                        if (!data || data.length === 0) return;
-                        data.forEach(function (movie) {
-                            $("<tr><td class='movie'>" + movie.title + "</td><td>" + movie.released + "</td><td>" + movie.tagline + "</td></tr>").appendTo(t)
-                                    .click(function() { showMovie($(this).find("td.movie").text());})
-                        });
-                        showMovie(data[0].title);
-                    }, "json");
+        function createUser() {
+            const form=$("#sign-up");
+            const username = form.find("input[name=username]").val();
+            const password = form.find("input[name=password]").val();
+            $.post("/create/user", {username: username, password: password},
+                function (data) {
+                    console.log("Created user: ", username);
+                    console.log(data);
+                });
             return false;
         }
 
-        $("#search").submit(search);
-        search();
+        $("#sign-up").submit(createUser);
     })
 </script>
 
@@ -110,7 +61,7 @@
         const offset = width / 2;
         const rawPosition = (width * xRatio);
         return [[-rawPosition + offset, height * yRatio], // left side
-                [rawPosition + offset, height * yRatio]]; // right side
+            [rawPosition + offset, height * yRatio]]; // right side
     }
 
     function drawNode(svg, xRatio, yRatio) {
@@ -120,8 +71,6 @@
             const circle = document.createElementNS(svgns, "circle");
             circle.setAttribute("cx", x);
             circle.setAttribute("cy", y);
-            circle.setAttribute("DEBUG_xRatio", xRatio);
-            circle.setAttribute("DEBUG_yRatio", yRatio);
             circle.setAttribute("r", String(nodeRadius));
 
             circle.setAttribute("class", "node");
