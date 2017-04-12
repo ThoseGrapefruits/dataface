@@ -16,7 +16,7 @@ Requirements
 
 Usage
 -----
-```
+```sh
 git clone https://github.com/ThoseGrapefruits/dataface.git
 cd dataface
 stack build
