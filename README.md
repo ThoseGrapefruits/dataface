@@ -25,9 +25,9 @@ stack exec dataface-exe
 
 Concept
 -------
-- A web game à la [picbreeder](http://picbreeder.org), in which users select from a random human
-  face structure (stored as a series of points in 2 or 3 dimensions) and slight modifications to
-  each new set of provided structures allows enormous changes to happen over time.
+A web game à la [picbreeder](http://picbreeder.org), in which users select from a random human
+face structure (stored as a series of 2D points) and slight modifications to each new set of
+provided structures allows larger changes to happen over time.
 
 Goals
 -----
