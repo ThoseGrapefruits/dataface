@@ -6,13 +6,12 @@ module Data (ServerState (..), WebM (..), constructState, querySearch, queryMovi
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Trans.Reader (ReaderT (..))
 import Crypto.BCrypt
-import Data.ByteString.Char8 (pack)
 import Data.List (nub)
 import Data.Maybe (fromJust)
 import Data.Map.Strict (fromList, (!))
 import Data.Monoid ((<>))
 import Data.Pool (Pool, createPool)
-import Data.Text (Text, unpack, toLower)
+import Data.Text (Text, toLower)
 import Data.Tuple.Select (sel1, sel2, sel3)
 import Data.Typeable (typeOf)
 import Database.Bolt

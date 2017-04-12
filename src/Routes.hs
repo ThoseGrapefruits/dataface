@@ -2,12 +2,17 @@
 
 module Routes where
 
+import Crypto.BCrypt
 import Control.Monad.Trans (lift, liftIO)
 import Control.Monad.Trans.Reader (ask)
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as C8
 import Data.Pool (withResource)
-import Data.Text.Lazy (Text, toStrict)
+import Data.Text.Lazy (Text, pack, unpack, toStrict, fromStrict)
 import Database.Bolt
+
 import Web.Scotty.Trans (ActionT, file, param, json, rescue)
+import Web.Scotty.Cookie
 
 import Type
 import Data
@@ -47,12 +52,25 @@ getUserR = do username <- param "username"
               liftIO . print $ user
               json user
 
+getHashedPassword :: Text -> IO C8.ByteString
+getHashedPassword password = do
+  Just hashedPassword <- (hashPasswordUsingPolicy slowerBcryptHashingPolicy (C8.pack (unpack password)))
+  return hashedPassword
+
+byteStringToText :: IO C8.ByteString -> IO Text
+byteStringToText byteString = do
+  bs <- byteString
+  return (pack (C8.unpack bs))
+
 -- |User creation route
 createUserR :: ActionT Text WebM ()
 createUserR = do username <- param "username"
                  password <- param "password"
-                 user <- runQ $ (createUser username password)
-                 liftIO . putStrLn $ "//// CREATE USER: "
+                 hashedPassword <- liftIO $ byteStringToText $ getHashedPassword $ password
+                 user <- runQ $ (createUser username (toStrict hashedPassword))
+                 setSimpleCookie "username" $ username
+                 setSimpleCookie "password" $ (toStrict hashedPassword)
+                 liftIO . putStrLn $ "//// createUserR: "
                  liftIO . print $ user
                  json user
 
