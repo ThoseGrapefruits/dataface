@@ -14,24 +14,13 @@ Requirements
     + Set up user with username & password of `dataface`, or change [Main.hs](app/Main.hs)
       to match your existing username & password
 
-Build
+Usage
 -----
 ```
 git clone https://github.com/ThoseGrapefruits/dataface.git
 cd dataface
 stack build
-```
-
-Usage
------
-###### UNIX / GNU+LINUX
-```
-PORT=8080 stack exec dataface-exe
-```
-
-###### WINDOWS (PowerShell)
-```
-$env:PORT = 8080; stack exec dataface-exe
+stack exec dataface-exe
 ```
 
 Concept
