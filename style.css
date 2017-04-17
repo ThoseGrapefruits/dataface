@@ -1,10 +1,14 @@
 @import url('https://fonts.googleapis.com/css?family=Cardo|Exo:900');
 
+html {
+    padding: 1em;
+}
+
 html, input, button {
     font-family: "Cardo", serif;
     font-weight: 400;
 }
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, svg {
     font-family: "Exo", sans-serif;
     font-weight: 900;
 }
@@ -13,6 +17,15 @@ button, input {
     background: none;
     border: solid black 0.1em;
     padding: 0.4em;
+}
+
+svg {
+    margin: 1em 1em 1em 0;
+    font-size: 4em;
+}
+
+svg text {
+    text-anchor: middle;
 }
 
 .node {

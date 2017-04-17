@@ -99,16 +99,67 @@
         }
     }
 
+    function drawText(svg, content) {
+        const text = document.createElementNS(svgns, "text");
+        text.setAttribute("x", String(width / 2));
+        text.setAttribute("y", String(height / 2));
+        text.setAttribute("fill", "#000");
+        text.setAttribute("fill-opacity", "0.2");
+        text.textContent = content;
+        svg.appendChild(text);
+    }
+
+    class Point {
+        constructor(face, x, y) {
+            this.face = face;
+            this.x = x;
+            this.y = y;
+            this.targets = [];
+        }
+    }
+
+    function groupBy(array, f) {
+        var groups = {};
+        array.forEach(function(o) {
+            const group = JSON.stringify(f(o));
+            groups[group] = groups[group] || [];
+            groups[group].push(o);
+        });
+        return Object.keys(groups).map( function( group )
+        {
+            return groups[group];
+        })
+    }
+
     $.getJSON("/faceGraph", function (json) {
-        const svg = createFaceSVG(width, height);
+        console.log(json);
+
+        let points = json.points.map((jsonPoint) => {
+            return new Point(jsonPoint.face, jsonPoint.x, jsonPoint.y);
+        });
 
         json.links.forEach(function (link) {
-            drawLink(svg, json.points[link.source], json.points[link.target])
+            const source = points[link.source];
+            const target = points[link.target];
+            source.targets.push(target)
         });
 
-        json.points.forEach(function (node) {
-            drawNode(svg, node.x, node.y);
+        const groupedPoints = groupBy(points, function(item) {
+            return [item.face];
         });
+
+        groupedPoints.forEach(function (group) {
+            const svg = createFaceSVG(width, height);
+
+            group.forEach(function (node) {
+                drawNode(svg, node.x, node.y);
+                node.targets.forEach(function (target) {
+                    drawLink(svg, node, target);
+                });
+            });
+
+            drawText(svg, group[0].face)
+        })
     });
 </script>
 </body>

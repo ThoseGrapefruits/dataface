@@ -48,7 +48,8 @@ data MGraph = MGraph
 -- Faces
 ---------------------------------------
 data Point = Point
-  { _x :: Double
+  { _fname :: Text
+  , _x :: Double
   , _y :: Double
   } deriving (Show, Eq, Ord)
 
@@ -64,7 +65,6 @@ data FGraph = FGraph
 
 data Face = Face
   { _fcreator :: Text
-  , _fname :: Text
   , _fgraph :: FGraph
   } deriving (Show, Eq)
 
@@ -104,13 +104,13 @@ instance ToJSON FGraph where
   toJSON (FGraph p l) = object [ "points" .= p, "links" .= l ]
 
 instance ToJSON Point where
-  toJSON (Point x y) = object [ "x" .= x, "y" .= y ]
+  toJSON (Point f x y) = object ["face" .= f, "x" .= x, "y" .= y ]
 
 instance ToJSON FRel where
   toJSON (FRel s t) = object [ "source" .= s, "target" .= t ]
 
 instance ToJSON Face where
-  toJSON (Face n c g) = object [ "name" .= n, "creator" .= c, "graph" .= g ]
+  toJSON (Face c g) = object [ "creator" .= c, "graph" .= g ]
 
 instance ToJSON User where
   toJSON (User n fs) = object [ "name" .= n, "faces" .= fs ]
@@ -131,15 +131,15 @@ toMovie v = do
   tagline :: Text <- (props `at` "tagline") >>= exact
   return $ Movie identity title released tagline
 
-toPoint :: Monad m => Value -> m Point
-toPoint (L [F x, F y]) = return $ Point x y
-toPoint p = fail ("Not a Point value" ++ (show p))
+toPoint :: Monad m => Text -> Value -> m Point
+toPoint name (L [F x, F y]) = return $ Point name x y
+toPoint name p = fail ("Not a Point value" ++ (show p))
 
-toPoint' :: Monad m => Node -> m Point
-toPoint' (Node _ _ nodeProps) = do
+toPoint' :: Monad m => Text -> Node -> m Point
+toPoint' name (Node _ _ nodeProps) = do
   x :: Double <- (nodeProps `at` "x") >>= exact
   y :: Double <- (nodeProps `at` "y") >>= exact
-  return $ Point x y
+  return $ Point name x y
 
 -- |Create movie node and actors node from single record
 toMovieNodes :: Monad m => Record -> m (MNode, [MNode])
@@ -151,10 +151,9 @@ toMovieNodes r = do
 -- |Create face node from single record
 toFaceNodes :: Monad m => Record -> m (Text, Point, [Point])
 toFaceNodes r = do
-  group :: Record <- (r `at` "group") >>= exact
   name :: Text <- (r `at` "name") >>= exact
-  point :: Node <- (group `at` "point") >>= exact
-  point' :: Point <- toPoint' $ point
-  linked :: [Node] <- (group `at` "linked") >>= exact
-  linked' :: [Point] <- traverse toPoint' linked
-  return (name, point', linked')
+  start :: Node <- (r `at` "start") >>= exact
+  start' :: Point <- toPoint' name start
+  linked :: [Node] <- (r `at` "linked") >>= exact
+  linked' :: [Point] <- traverse (toPoint' name) linked
+  return (name, start', linked')
