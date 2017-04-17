@@ -130,7 +130,7 @@ queryUser username = do records <- queryP cypher params
                         graph <- liftIO $ (buildFGraph records)
                         return (User username [(Face username "face" graph)])
   where cypher = "MATCH (u:User {username: {username} })-[:CREATED]->(f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point) " <>
-                 "RETURN u.username as username, f0.name as name, {point: start , linked: COLLECT(DISTINCT end)} as group"
+                 "RETURN u.username as username, f0.name as name, {point: start, linked: COLLECT(DISTINCT end)} as group"
         params = fromList [("username", T username)]
 
 -- |Create user with the given username and password
@@ -143,18 +143,6 @@ createUser username password = do
   where cypher = "CREATE (u:User {username: {username}, passwordHash: {passwordHash}})" <>
                  "RETURN u"
         params = fromList [("username", T (toLower username)), ("passwordHash", T password)]
-
--- |Returns faces by username of owner
--- queryFace :: Text -> BoltActionT IO Face
--- queryFace username = do result <- head <$> queryP cypher params
-                        -- T id <- result `at` "id"
-                        -- T name <- result `at` "name"
-                        -- return $ Face id name startsAt
-  -- where cypher = "MATCH (u:User {username:{username}})-[:CREATED]->(f0:Face)<-[:LINK*]-(ps:Point) " <>
-                 -- "OPTIONAL MATCH (f0:Face)-[:CHILD*{isFork: false}]->(fx:Face) " <>
-                 -- "RETURN coalesce(fx, f0) as face, collect(ps) as points"
-        -- params = fromList [("username", T username)]
-
 
 -- |Create pool of connections
 constructState :: BoltCfg -> IO ServerState

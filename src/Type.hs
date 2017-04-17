@@ -4,7 +4,7 @@
 module Type where
 
 import Data.Aeson (ToJSON (..), object, (.=))
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Map (singleton)
 import Control.Monad.Trans (liftIO)
 
@@ -141,8 +141,8 @@ toPoint' (Node _ _ nodeProps) = do
   y :: Double <- (nodeProps `at` "y") >>= exact
   return $ Point x y
 
-toPointsTuple :: Monad m => Node -> Node -> m (Point, Point)
-toPointsTuple n1 n2 = (toPoint' n1, tPoint' n2)
+toPointsTuple :: Monad m => Node -> Node -> (m Point, [m Point])
+toPointsTuple point points = (toPoint' point, traverse toPoint' points)
 
 -- |Create movie node and actors node from single record
 toMovieNodes :: Monad m => Record -> m (MNode, [MNode])
@@ -154,8 +154,10 @@ toMovieNodes r = do
 -- |Create face node from single record
 toFaceNodes :: Monad m => Record -> m (Text, [(Point, Point)])
 toFaceNodes r = do
-  -- Currently refactoring (Point, [Point]) to (Point, Point) based on new query
   links :: [Record] <- (r `at` "links") >>= exact
-  links' :: [(Point, Point)] <- traverse toPointsTuple links
+  return $ putStrLn $ "// links"
+  return $ print $ links
+  -- links' :: [(m Point, m Point)] <- traverse toPointsTuple links
   name :: Text <- (r `at` "name") >>= exact
-  return (name, links')
+  -- return (name, links')
+  return (pack "",[])
