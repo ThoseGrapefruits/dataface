@@ -141,6 +141,9 @@ toPoint' (Node _ _ nodeProps) = do
   y :: Double <- (nodeProps `at` "y") >>= exact
   return $ Point x y
 
+toPointsTuple :: Monad m => Node -> Node -> m (Point, Point)
+toPointsTuple n1 n2 = (toPoint' n1, tPoint' n2)
+
 -- |Create movie node and actors node from single record
 toMovieNodes :: Monad m => Record -> m (MNode, [MNode])
 toMovieNodes r = do
@@ -149,12 +152,10 @@ toMovieNodes r = do
   return (MNode title "movie", (`MNode` "actor") <$> casts)
 
 -- |Create face node from single record
-toFaceNodes :: Monad m => Record -> m (Text, Point, [Point])
+toFaceNodes :: Monad m => Record -> m (Text, [(Point, Point)])
 toFaceNodes r = do
-  group :: Record <- (r `at` "group") >>= exact
+  -- Currently refactoring (Point, [Point]) to (Point, Point) based on new query
+  links :: [Record] <- (r `at` "links") >>= exact
+  links' :: [(Point, Point)] <- traverse toPointsTuple links
   name :: Text <- (r `at` "name") >>= exact
-  point :: Node <- (group `at` "point") >>= exact
-  point' :: Point <- toPoint' $ point
-  linked :: [Node] <- (group `at` "linked") >>= exact
-  linked' :: [Point] <- traverse toPoint' linked
-  return (name, point', linked')
+  return (name, links')

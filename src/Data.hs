@@ -120,7 +120,7 @@ queryFaceGraph limit = do records <- queryP cypher params
                           liftIO . print $ graph
                           return $ graph
   where cypher = "MATCH (f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point) " <>
-                 "RETURN f0.name as name, {point: start, linked: COLLECT(DISTINCT end)} as group"
+                 "RETURN f0.name as name, COLLECT(DISTINCT {point: start, linked: end}) as links"
         params = fromList [("limit", I limit)]
 
 queryUser :: Text -> BoltActionT IO User
