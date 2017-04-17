@@ -77,7 +77,7 @@ queryUser username = do records <- queryP cypher params
                         graph <- liftIO $ (buildFGraph records)
                         return (User username [(Face username "face" graph)])
   where cypher = "MATCH (u:User {username: {username} })-[:CREATED]->(f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point) " <>
-                 "RETURN u.username as username, f0.name as name, {point: start, linked: COLLECT(DISTINCT end)} as group"
+                 "RETURN u.username as username, f0.name as name, {start: start, linked: COLLECT(DISTINCT end)} as group"
         params = fromList [("username", T username)]
 
 -- |Create user with the given username and password

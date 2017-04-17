@@ -70,16 +70,18 @@ toPoint' (Node _ _ nodeProps) = do
   y :: Double <- (nodeProps `at` "y") >>= exact
   return $ Point x y
 
-toPointsTuple :: Monad m => Node -> Node -> (m Point, [m Point])
-toPointsTuple point points = (toPoint' point, traverse toPoint' points)
+toPointsTuple :: Monad m => Node -> [Node] -> m (m Point, [m Point])
+toPointsTuple start linked = do
+  return (toPoint' start, (map toPoint' linked))
 
 -- |Create face node from single record
-toFaceNodes :: Monad m => Record -> m (Text, [(Point, Point)])
+toFaceNodes :: Monad m => Record -> m (Text, m Point, [m Point])
 toFaceNodes r = do
-  links :: [Record] <- (r `at` "links") >>= exact
-  return $ putStrLn $ "// links"
-  return $ print $ links
-  -- links' :: [(m Point, m Point)] <- traverse toPointsTuple links
+  group :: Record <- (r `at` "group") >>= exact
+  start :: Node <- (group `at` "start") >>= exact
+  linked :: [Node] <- (group `at` "linked") >>= exact
+  return $ putStrLn $ "// linked"
+  return $ print $ linked
+  (start' :: m Point, linked' :: [m Point]) <- (toPointsTuple start linked)
   name :: Text <- (r `at` "name") >>= exact
-  -- return (name, links')
-  return (pack "",[])
+  return (name, start', linked')
