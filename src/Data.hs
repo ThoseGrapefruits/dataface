@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Data (ServerState (..), WebM (..), constructState, querySearch, queryMovie, queryGraph,
-             queryUser, createUser, queryFaceGraph) where
+module Data (ServerState (..), WebM (..), constructState, queryUser, createUser, queryFaceGraph) where
 
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Trans.Reader (ReaderT (..))
@@ -23,58 +22,6 @@ data ServerState = ServerState { pool :: Pool Pipe }
 
 -- |Reader monad over IO to store connection pool
 type WebM = ReaderT ServerState IO
-
--- |Search movie by title pattern
-querySearch :: Text -> BoltActionT IO [Movie]
-querySearch q = do records <- queryP cypher params
-                   nodes <- traverse (`at` "movie") records
-                   traverse toMovie nodes
-  where cypher = "MATCH (movie:Movie) WHERE movie.title =~ {title} RETURN movie"
-        params = fromList [("title", T $ "(?i).*" <> q <> ".*")]
-
--- |Returns movie by title
-queryMovie :: Text -> BoltActionT IO MovieInfo
-queryMovie title = do result <- head <$> queryP cypher params
-                      T title <- result `at` "title"
-                      L members <- result `at` "cast"
-                      cast <- traverse toCast members
-                      return $ MovieInfo title cast
-  where cypher = "MATCH (movie:Movie {title:{title}}) " <>
-                 "OPTIONAL MATCH (movie)<-[r]-(person:Person) " <>
-                 "RETURN movie.title as title," <>
-                 "collect([person.name, " <>
-                 "         head(split(lower(type(r)), '_')), r.roles]) as cast " <>
-                 "LIMIT 1"
-        params = fromList [("title", T title)]
-
--- |Returns movies with all it's actors
-queryGraph :: Int -> BoltActionT IO MGraph
-queryGraph limit = do records <- queryP cypher params
-                      liftIO . putStrLn $ "// records: "
-                      liftIO . print $ records
-                      nodeTuples <- traverse toMovieNodes records
-                      liftIO . putStrLn $ "// nodeTuples: "
-                      liftIO . print $ nodeTuples
-                      let movies = fst <$> nodeTuples
-                      liftIO . putStrLn $ "// movies: "
-                      liftIO . print $ movies
-                      let actors = nub $ concatMap snd nodeTuples
-                      liftIO . putStrLn $ "// actors: "
-                      liftIO . print $ actors
-                      let actorIdx = fromJust . (`lookup` zip actors [0..])
-                      let modifyTpl (m, as) = (m, actorIdx <$> as)
-                      let indexMap = fromList $ modifyTpl <$> nodeTuples
-                      liftIO . putStrLn $ "// indexMap: "
-                      liftIO . print $ indexMap
-                      let mkTuples (m, t) = (`MRel` t) <$> indexMap ! m
-                      let relations = concatMap mkTuples $ zip movies [length actors..]
-                      liftIO . putStrLn $ "// relations: "
-                      liftIO . print $ relations
-                      return $ MGraph (actors <> movies) relations
-  where cypher = "MATCH (m:Movie)<-[:ACTED_IN]-(a:Person) " <>
-                 "RETURN m.title as movie, collect(a) as cast " <>
-                 "LIMIT {limit}"
-        params = fromList [("limit", I limit)]
 
 buildFGraph :: [Record] -> IO FGraph
 buildFGraph records = do nodeTuples <- traverse toFaceNodes records
