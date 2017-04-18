@@ -39,7 +39,8 @@ graphR = do limit <- param "limit" `rescue` const (return 5)
 -- |Face graph response route
 faceGraphR :: ActionT Text WebM ()
 faceGraphR = do limit <- param "limit" `rescue` const (return 5)
-                graph <- runQ $ queryFaceGraph limit
+                -- |graph <- runQ $ queryFaceGraph limit
+                graph <- runQ $ queryLatestFaces limit
                 liftIO . print $ "//// GRAPH: "
                 liftIO . print $ graph
                 json graph

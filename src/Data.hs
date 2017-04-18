@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Data (ServerState (..), WebM (..), constructState, querySearch, queryMovie, queryGraph,
-             queryUser, createUser, queryFaceGraph) where
+             queryUser, createUser, queryFaceGraph, queryLatestFaces) where
 
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Trans.Reader (ReaderT (..))
@@ -11,8 +11,8 @@ import Data.Maybe (fromJust)
 import Data.Map.Strict (fromList, (!))
 import Data.Monoid ((<>))
 import Data.Pool (Pool, createPool)
-import Data.Text (Text, toLower)
-import Data.Tuple.Select (sel1, sel2, sel3)
+import Data.Text (Text, toLower, pack)
+import Data.Tuple.Select (sel1, sel2, sel3, sel4)
 import Data.Typeable (typeOf)
 import Database.Bolt
 
@@ -106,6 +106,17 @@ buildFGraph records = do nodeTuples <- traverse toFaceNodes records
                          liftIO . print $ relations
                          return (FGraph points relations)
 
+-- {}
+buildFace :: [Record] -> IO Face
+buildFace records = do nodeTuples <- traverse toWrappedNode records
+                         liftIO . putStrLn $ ""
+                         liftIO . putStrLn $ "// nodeTuples: "
+                         liftIO . print $ nodeTuples
+                         let date = sel1 <$> nodeTuples
+                         let graph = sel2 <$> nodeTuples
+                         let graph' = buildFGraph graph
+                         return (Face date graph')
+
 -- |Returns face with all it's points
 queryFaceGraph :: Int -> BoltActionT IO FGraph
 queryFaceGraph limit = do records <- queryP cypher params
@@ -121,6 +132,25 @@ queryFaceGraph limit = do records <- queryP cypher params
                           return $ graph
   where cypher = "MATCH (f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point) " <>
                  "RETURN f0.name as name, start, COLLECT(DISTINCT end) as linked"
+        params = fromList [("limit", I limit)]
+
+-- |Returns all faces with all their points ordered by time of creation
+-- |(newer faces first)
+queryLatestFaces :: Int -> BoltActionT IO FGraph
+queryLatestFaces limit = do records <- queryP cypher params
+                            liftIO . print . typeOf $ records
+                            liftIO . putStrLn $ ""
+                            liftIO . putStrLn $ "// records: "
+                            liftIO . print $ records
+                            graph <- liftIO $ (buildFGraph records)
+                            liftIO . print . typeOf $ graph
+                            liftIO . putStrLn $ ""
+                            liftIO . putStrLn $ "// graph: "
+                            liftIO . print $ graph
+                            return $ graph
+                          --return (Face date graph)
+  where cypher = "MATCH (f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point) " <>
+                 "RETURN f0.name as name, start, COLLECT(DISTINCT end) as linked, f0.created_at as created"
         params = fromList [("limit", I limit)]
 
 queryUser :: Text -> BoltActionT IO User

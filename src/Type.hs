@@ -64,7 +64,7 @@ data FGraph = FGraph
   } deriving (Show, Eq)
 
 data Face = Face
-  { _fcreator :: Text
+  { _fdate :: Text
   , _fgraph :: FGraph
   } deriving (Show, Eq)
 
@@ -156,4 +156,11 @@ toFaceNodes r = do
   start' :: Point <- toPoint' name start
   linked :: [Node] <- (r `at` "linked") >>= exact
   linked' :: [Point] <- traverse (toPoint' name) linked
-  return (name, start', linked')
+  return (name, start', linked', created)
+
+-- |Wrapped face with timestamp
+toWrappedNode :: Monad m => Record -> m(Text, (Text, Point, [Point]))
+toWrappedNode r = do
+  date :: Text <- (r `at` "date") >>= exact
+  graph :: (Text, Point, [Point]) <- (r `at` "graph") >>= toFaceNodes
+  return (Face date graph)

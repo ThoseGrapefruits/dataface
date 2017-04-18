@@ -120,10 +120,13 @@
 
     function groupBy(array, f) {
         var groups = {};
+        var correctOrder = {};
         array.forEach(function(o) {
             const group = JSON.stringify(f(o));
             groups[group] = groups[group] || [];
             groups[group].push(o);
+            // Object.keys screws up order of groups; order of query results
+            // is not directly reflected on the page
         });
         return Object.keys(groups).map( function( group )
         {
@@ -144,6 +147,7 @@
             source.targets.push(target)
         });
 
+// Maybe this grouping is messing up order?
         const groupedPoints = groupBy(points, function(item) {
             return [item.face];
         });
