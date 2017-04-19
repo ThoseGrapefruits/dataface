@@ -123,25 +123,25 @@ CREATE
     (lips_corner) -[:LINK]-> (inline_bottomMiddle)
 
 // Face duplication
-MATCH (u:User {username: "root" })-[created:CREATED]->(f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point)
-WITH COLLECT(l) AS links, f0 AS f0, p0 AS p0, created AS created, u AS u
-CREATE (copy:Face)
-SET copy=f0
-SET copy.name = 'Copy2'
-
-CREATE (u)-[:CREATED]->(copy)
-
-CREATE (copyP0:Point)
-SET copyP0=p0
-
-CREATE (copy)-[:STARTS_AT]->(copyP0)
-
-FOREACH (link in links |
-  CREATE (copyStart:Point)
-  SET copyStart=startNode(link)
-  CREATE (copyEnd:Point)
-  SET copyEnd=endNode(link)
-  CREATE (copyStart)-[copyLink:LINK]->(copyEnd)
-)
-
-RETURN copy, copyP0
+// MATCH (u:User {username: "root" })-[created:CREATED]->(f0:Face)-[:STARTS_AT]->(p0:Point)<-[:LINK*0..10]-(end:Point)-[l:LINK]-(start:Point)
+// WITH COLLECT(l) AS links, f0 AS f0, p0 AS p0, created AS created, u AS u
+// CREATE (copy:Face)
+// SET copy=f0
+// SET copy.name = 'Copy2'
+// 
+// CREATE (u)-[:CREATED]->(copy)
+// 
+// CREATE (copyP0:Point)
+// SET copyP0=p0
+// 
+// CREATE (copy)-[:STARTS_AT]->(copyP0)
+// 
+// FOREACH (link in links |
+  // CREATE (copyStart:Point)
+  // SET copyStart=startNode(link)
+  // CREATE (copyEnd:Point)
+  // SET copyEnd=endNode(link)
+  // CREATE (copyStart)-[copyLink:LINK]->(copyEnd)
+// )
+// 
+// RETURN copy, copyP0
